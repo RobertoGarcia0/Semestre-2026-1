@@ -3,3 +3,4 @@
 Workspaces/*/build
 Workspaces/*/install
 Workspaces/*/log
+**/carpeta_ejemplo/*

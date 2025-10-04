@@ -1,0 +1,130 @@
+<robot name="rrr_robot"> 
+  <!--Definición de eslabones--> 
+<link name = "world_link">
+</link>
+<link name = "base_link">
+  <visual>
+      <origin xyz = "0 0.05 0" rpy = "0 0 0"/> 
+        <geometry> 
+        <box size = "0.2 0.1 0.2"/> 
+     </geometry> 
+        <material name = "Black1"> 
+        <color rgba = "0 0 0 1.0"/> 
+      </material> 
+    </visual> 
+</link> 
+ 
+<link name = "shoulder_link"> 
+   <visual> 
+      <origin xyz = "0.15 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.3 0.03 0.03"/> 
+     </geometry> 
+      <material name = "Red1"> 
+        <color rgba = "1 0 0 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+
+<link name = "x_axis"> 
+   <visual> 
+      <origin xyz = "0 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.4 0.05 0.05"/> 
+     </geometry> 
+      <material name = "x"> 
+        <color rgba = "1 0 0 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+<link name = "y_axis"> 
+   <visual> 
+      <origin xyz = "0 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.05 0.4 0.05"/> 
+     </geometry> 
+      <material name = "y"> 
+        <color rgba = "0 1 0 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+<link name = "z_axis"> 
+   <visual> 
+      <origin xyz = "0 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.05 0.05 0.4"/> 
+     </geometry> 
+      <material name = "z"> 
+        <color rgba = "0 0 1 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+<link name = "arm_link"> 
+   <visual> 
+      <origin xyz = "0.15 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.3 0.03 0.03"/> 
+     </geometry> 
+      <material name = "green"> 
+        <color rgba = "0 1 0 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+<link name = "forearm_link"> 
+   <visual> 
+      <origin xyz = "0.15 0 0" rpy = "0 0 0"/> 
+    <geometry> 
+      <box size = "0.3 0.03 0.03"/> 
+     </geometry> 
+      <material name = "blue"> 
+        <color rgba = "0 0 1 1.0"/> 
+      </material> 
+    </visual> 
+  </link> 
+ 
+  <!--Definició de juntas--> 
+<joint name = "world_joint" type = "fixed"> 
+  <parent link = "world_link"/> 
+  <child link = "base_link"/> 
+  <origin xyz = "0 0 0" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 1"/> 
+</joint>
+
+<joint name = "shoulder_joint" type = "revolute"> 
+  <parent link = "base_link"/> 
+  <child link = "shoulder_link"/> 
+  <origin xyz = "0 0.1 0" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 1"/> 
+</joint>
+<joint name = "x_joint" type = "fixed"> 
+  <parent link = "base_link"/> 
+  <child link = "x_axis"/> 
+  <origin xyz = "0.2 0 0" rpy = "0 0 0"/> 
+</joint>
+<joint name = "y_joint" type = "fixed"> 
+  <parent link = "base_link"/> 
+  <child link = "y_axis"/> 
+  <origin xyz = "0 0.2 0" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 0"/> 
+</joint>
+
+<joint name = "z_joint" type = "fixed"> 
+  <parent link = "base_link"/> 
+  <child link = "z_axis"/> 
+  <origin xyz = "0 0 0.2" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 0"/> 
+</joint>
+<joint name = "arm_joint" type = "revolute"> 
+  <parent link = "shoulder_link"/> 
+  <child link = "arm_link"/> 
+  <origin xyz = "0.3 0 0" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 1"/> 
+</joint>
+<joint name = "forearm_joint" type = "revolute"> 
+  <parent link = "arm_link"/> 
+  <child link = "forearm_link"/> 
+  <origin xyz = "0.3 0 0" rpy = "0 0 0"/> 
+  <axis xyz = "0 0 1"/> 
+</joint>
+ 
+</robot>
