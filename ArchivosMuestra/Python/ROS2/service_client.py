@@ -2,7 +2,6 @@
 import rclpy
 from rclpy.node import Node
 from example_interfaces.srv import AddTwoInts
-AddTwoInts.Response
 from rclpy.task import Future
 
 class SimpleServiceClient(Node):
@@ -14,6 +13,7 @@ class SimpleServiceClient(Node):
     self.b = 10
 
     self.client = self.create_client(AddTwoInts, service_name)
+    
     while not self.client.wait_for_service(timeout_sec=1.0):
       self.get_logger().info('Esperando al servicio {}...'.format(service_name))
 
