@@ -23,9 +23,17 @@ def generate_launch_description():
     output='screen'
   )
 
+  turtle_sim = Node(
+    package='turtlesim',
+    executable="turtlesim_node",
+    name='turtlesim_node',
+    output='screen'
+  )
+
   return LaunchDescription([
     publisher_node, 
-    subscriber_node
+    subscriber_node,
+    turtle_sim
     ])
 
 

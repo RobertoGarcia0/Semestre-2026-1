@@ -11,7 +11,7 @@ class SimpleSubscriber(Node):
       String,
       topic_name,
       self.listener_callback,
-      
+      10
     )
     self.get_logger().info('Suscriptor escuchando topico: {}'.format(topic_name))
 
