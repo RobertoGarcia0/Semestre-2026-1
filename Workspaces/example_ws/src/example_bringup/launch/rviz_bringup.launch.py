@@ -11,12 +11,11 @@ def generate_launch_description():
   rviz_conf_path = os.path.join(description_path, "rviz", "rviz_config.rviz")
   #Modelo URDF como parámetro
   robot_description = {"robot_description": Command(["xacro ", model_path])}
-  #Configuración de Rviz como parámetro
-  display_config = {"display_config": rviz_conf_path}
+
   rviz_node = Node(
     package='rviz2',
     executable="rviz2",
-    parameters=[display_config]
+    arguments=["-d", rviz_conf_path]
   )
   jsp_node = Node(
     package='joint_state_publisher_gui',
