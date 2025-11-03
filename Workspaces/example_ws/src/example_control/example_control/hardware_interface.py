@@ -5,7 +5,7 @@ from sensor_msgs.msg import JointState
 
 class HardwareInterface(Node):
   def __init__(self):
-    self.super().init("hardware_interface")
+    super().__init__("hardware_interface")
     # Inicializar las comunicaciones
     # --- 
     # Recibir información de posiciones deseadas
@@ -27,8 +27,9 @@ class HardwareInterface(Node):
     msg = JointState()
     # En esta parte recibiría la información del estado del robot
     # ---
+    msg.header.stamp = self.get_clock().now().to_msg()
     msg.name = ["shoulder_joint", "arm_joint", "forearm_joint"]
-    msg.position = [0, 0, 0]
+    msg.position = [0.0, 0.0, 0.0]
     self.joint_states_publisher.publish(msg)
 
 def main(args=None):

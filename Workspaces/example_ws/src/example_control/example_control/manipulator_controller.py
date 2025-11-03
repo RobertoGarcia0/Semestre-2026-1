@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 
 class ManipulatorController(Node):
   def __init__(self):
-    self.super().init("manipulator_controller")
+    super().__init__("manipulator_controller")
     # Recibr información de posición deseada
     self.end_effector_goal_subscriber = self.create_subscription(
       Twist, "/end_effector_goal", self.end_effector_callback, 10

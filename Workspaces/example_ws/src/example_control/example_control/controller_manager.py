@@ -19,11 +19,11 @@ class ControlManager(Node):
       JointState, "/joint_hardware_objectives", 10
     )
   def joint_state_callback(self, msg:JointState):
-    self.get_logger().info("Robot current position: \n{}: {} \n{}: {} \n{}: {}".format(
+    """self.get_logger().info("Robot current position: \n{}: {} \n{}: {} \n{}: {}".format(
       msg.name[0], msg.position[0],
       msg.name[1], msg.position[1],
       msg.name[2], msg.position[2]
-    ))
+    ))"""
     pass
 
   def joint_goal_callback(self, msg:JointState):
