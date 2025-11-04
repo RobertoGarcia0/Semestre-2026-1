@@ -47,10 +47,15 @@ class RobotKinematics():
     R_y = Matrix([ [cos(beta), 0, sin(beta)], [0, 1, 0],[-sin(beta), 0, cos(beta)]])
     R_x = Matrix([ [1, 0, 0], [0, cos(gamma), -sin(gamma)],[0, sin(gamma), cos(gamma)]])
 
-    R = R_x * R_y * R_z
-    p = Matrix([[x],[y],[z]])
-    T = Matrix.vstack(Matrix.hstack(R, p), Matrix([[0,0,0,1]]))
-    return T  
+    p_x = Matrix([[x],[0],[0]])
+    p_y = Matrix([[0],[y],[0]])
+    p_z = Matrix([[0],[0],[z]])
+    
+    
+    T_x = Matrix.vstack(Matrix.hstack(R_x, p_x), Matrix([[0,0,0,1]]))
+    T_y = Matrix.vstack(Matrix.hstack(R_y, p_y), Matrix([[0,0,0,1]]))
+    T_z = Matrix.vstack(Matrix.hstack(R_z, p_z), Matrix([[0,0,0,1]]))
+    return T_x * T_y * T_z
 
 def main():
   robot = RobotKinematics()
