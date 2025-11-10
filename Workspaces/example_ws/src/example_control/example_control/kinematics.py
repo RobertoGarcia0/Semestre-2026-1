@@ -23,6 +23,16 @@ class RobotKinematics():
       [z_0_p], 
       [th_0_p]
     ])
+    self.J = Matrix.hstack(diff(self.xi_0_p, self.theta_0_1), 
+                           diff(self.xi_0_p, self.theta_1_2), 
+                           diff(self.xi_0_p, self.theta_2_3))
+    self.J_inv = self.J.inv()
+    # Vector de velocidades del espacio de trabajo para sustituir valores muestreados
+    self.x_dot, self.y_dot, self.th_dot = symbols("x_dot, y_dot, th_dot")
+    self.xi_dot = Matrix([[self.x_dot], 
+                          [self.y_dot], 
+                          [self.th_dot]])
+
     """print("Matriz de transformación T_0_p: ")
     print(T_0_p.subs([
       (self.theta_0_1, pi/4), (self.theta_1_2, -pi/4), (self.theta_2_3, pi/4)
@@ -31,7 +41,7 @@ class RobotKinematics():
     print(self.xi_0_p.subs([
       (self.theta_0_1, pi/4), (self.theta_1_2, -pi/4), (self.theta_2_3, pi/4)
     ]))
-  def trajectory_generator(self, q_in = [0.1, 0.1, 0.1], xi_fn = [0, 0, 0], duration = 5):
+  def trajectory_generator(self, q_in = [0.1, 0.1, 0.1], xi_fn = [0.8, 0.1, 0], duration = 10):
     self.freq = 10
     print("Definiendo trayectoria")
     # Definiendo polinomio lambda
@@ -118,11 +128,100 @@ class RobotKinematics():
       self.xi_m[:, a]         = xi.subs(self.t, self.t_m[0,a])
       self.xi_dot_m[:, a]     = xi_dot.subs(self.t, self.t_m[0,a])
       self.xi_dot_dot_m[:, a] = xi_dot_dot.subs(self.t, self.t_m[0,a])
-    self.simple_graph(self.xi_m, self.t_m)
+      print("Iteración E.T.: " + str(a))
+    self.q_in = q_in
+    self.ws_graph()
+
+  def inverse_kinematics(self):
+    # Ecuación de cinemática inversa
+    # q_dot = J_inv * xi_dot
+    self.q_dot = self.J_inv * self.xi_dot
+    # print(self.q_dot)
+    # Generar arreglos para muestrear la trayectoria de las juntas
+    # 3 filas, n columnas (n = número de muestras)
+    self.q_m         = Matrix.zeros(3, self.samples)
+    self.q_dot_m     = Matrix.zeros(3, self.samples)
+    self.q_dot_dot_m = Matrix.zeros(3, self.samples)
+    # Agregar posiciones, velocidades y aceleraciones iniciales
+    self.q_m[:, 0]          = Matrix([[self.q_in[0]], [self.q_in[1]], [self.q_in[2]]])
+    self.q_dot_m[:, 0]      = Matrix.zeros(3, 1)
+    self.q_dot_dot_m[:, 0]  = Matrix.zeros(3, 1)
+    # Crear función lambda de la velocidad de las juntas
+    self.q_dot_lam = lambdify([self.x_dot, self.y_dot, self.th_dot,
+                               self.theta_0_1, self.theta_1_2, self.theta_2_3], self.q_dot, modules='numpy')
+    # Muestreo del espacio de las juntas
+    for a in range(self.samples - 1):
+      # Posiciones de las juntas
+      # x_sig = x_act + vel * dt
+      self.q_m[:, a+1] = self.q_m[:, a] + self.q_dot_m[:, a] * self.dt
+      # Velocidad siguiente de las juntas
+      self.q_dot_m[:, a+1] = self.q_dot_lam(float(self.xi_dot_m[0, a]), 
+                                            float(self.xi_dot_m[1, a]), 
+                                            float(self.xi_dot_m[2, a]),
+                                            float(self.q_m[0, a]), 
+                                            float(self.q_m[1, a]), 
+                                            float(self.q_m[2, a]))
+      
+      """self.q_dot_m[:, a+1] = self.q_dot.subs({self.x_dot:  self.xi_dot_m[0, a],
+                                              self.y_dot:  self.xi_dot_m[1, a],
+                                              self.th_dot: self.xi_dot_m[2, a],
+                                              self.theta_0_1: self.q_m[0, a],
+                                              self.theta_1_2: self.q_m[1, a],
+                                              self.theta_2_3: self.q_m[2, a]})"""
+      print("Iteración E.J.: " + str(a))
+      # Aceleraciones
+      # ac_sig = (v_sig - v_act) / dt
+      self.q_dot_dot_m[:, a+1] = (self.q_dot_m[:, a+1] - self.q_dot_m[:, a]) / self.dt
+    self.q_graph()
+
+  def ws_graph(self):
+    
+    fig, (p_g, v_g, a_g) = plt.subplots(nrows=1, ncols=3)
+    fig.suptitle("Espacio de trabajo")
+    
+    p_g.set_title("Posiciones")
+    p_g.plot(self.t_m.T, self.xi_m[0, :].T, color = "RED")
+    p_g.plot(self.t_m.T, self.xi_m[1, :].T, color = (0, 1, 0))
+    p_g.plot(self.t_m.T, self.xi_m[2, :].T, color = "blue")
+
+    v_g.set_title("Velocidades")
+    v_g.plot(self.t_m.T, self.xi_dot_m[0, :].T, color = "RED")
+    v_g.plot(self.t_m.T, self.xi_dot_m[1, :].T, color = (0, 1, 0))
+    v_g.plot(self.t_m.T, self.xi_dot_m[2, :].T, color = "blue")
+
+    a_g.set_title("Aceleraciones")
+    a_g.plot(self.t_m.T, self.xi_dot_dot_m[0, :].T, color = "RED")
+    a_g.plot(self.t_m.T, self.xi_dot_dot_m[1, :].T, color = (0, 1, 0))
+    a_g.plot(self.t_m.T, self.xi_dot_dot_m[2, :].T, color = "blue")
+    
+    plt.show()
+
+  def q_graph(self):
+    
+    fig, (p_g, v_g, a_g) = plt.subplots(nrows=1, ncols=3)
+    fig.suptitle("Espacio de las juntas")
+    
+    p_g.set_title("Posiciones")
+    p_g.plot(self.t_m.T, self.q_m[0, :].T, color = "RED")
+    p_g.plot(self.t_m.T, self.q_m[1, :].T, color = (0, 1, 0))
+    p_g.plot(self.t_m.T, self.q_m[2, :].T, color = "blue")
+
+    v_g.set_title("Velocidades")
+    v_g.plot(self.t_m.T, self.q_dot_m[0, :].T, color = "RED")
+    v_g.plot(self.t_m.T, self.q_dot_m[1, :].T, color = (0, 1, 0))
+    v_g.plot(self.t_m.T, self.q_dot_m[2, :].T, color = "blue")
+
+    a_g.set_title("Aceleraciones")
+    a_g.plot(self.t_m.T, self.q_dot_dot_m[0, :].T, color = "RED")
+    a_g.plot(self.t_m.T, self.q_dot_dot_m[1, :].T, color = (0, 1, 0))
+    a_g.plot(self.t_m.T, self.q_dot_dot_m[2, :].T, color = "blue")
+    
+    plt.show()
 
   def simple_graph(self, val_m, t_m):
     plt.plot(t_m.T, val_m[0, :].T)
     plt.show()
+  
 
 
 
@@ -156,6 +255,7 @@ def main():
   robot = RobotKinematics()
   robot.direct_kinematics()
   robot.trajectory_generator()
+  robot.inverse_kinematics()
 
 if __name__ == "__main__":
   main()
