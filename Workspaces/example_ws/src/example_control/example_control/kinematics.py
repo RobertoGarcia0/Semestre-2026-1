@@ -7,7 +7,7 @@ class RobotKinematics():
   def __init__(self):
     pass
   def direct_kinematics(self):
-    print("Definiendo matrices de transformación")
+    print("Definiendo variables del modelo en sympy")
     self.theta_0_1, self.theta_1_2, self.theta_2_3 = symbols("theta_0_1, theta_1_2, theta_2_3")
     T_0_1 = self.trans_homo(0, 0.1, 0, pi/2, 0, self.theta_0_1)
     T_1_2 = self.trans_homo_xz(0.3, 0, 0, self.theta_1_2)
@@ -32,15 +32,18 @@ class RobotKinematics():
     self.xi_dot = Matrix([[self.x_dot], 
                           [self.y_dot], 
                           [self.th_dot]])
-
+    # Ecuación de cinemática inversa
+    # q_dot = J_inv * xi_dot
+    self.q_dot = self.J_inv * self.xi_dot
     """print("Matriz de transformación T_0_p: ")
     print(T_0_p.subs([
       (self.theta_0_1, pi/4), (self.theta_1_2, -pi/4), (self.theta_2_3, pi/4)
     ]))"""
-    print("vector de postura xi_0_p: ")
+    """print("vector de postura xi_0_p: ")
     print(self.xi_0_p.subs([
       (self.theta_0_1, pi/4), (self.theta_1_2, -pi/4), (self.theta_2_3, pi/4)
-    ]))
+    ]))"""
+    print("Definidas todas las variables")
   def trajectory_generator(self, q_in = [0.1, 0.1, 0.1], xi_fn = [0.8, 0.1, 0], duration = 10):
     self.freq = 10
     print("Definiendo trayectoria")
@@ -121,22 +124,25 @@ class RobotKinematics():
     self.t_m[0, 0] = 0
     for a in range(self.samples - 1):
       self.t_m[0, a+1] = self.t_m[0, a] + self.dt
-    print(self.t_m)
+    """print(self.t_m)"""
     # Muestreando espacio de trabajo
     # xi_muestreado[columna 1] = xi.substituida(t=algo)
+    # Crear funciones lambda del efector final
+    xi_lam         = lambdify([self.t], xi, modules='numpy')
+    xi_dot_lam     = lambdify([self.t], xi_dot, modules='numpy')
+    xi_dot_dot_lam = lambdify([self.t], xi_dot_dot, modules='numpy')
     for a in range(self.samples):
-      self.xi_m[:, a]         = xi.subs(self.t, self.t_m[0,a])
+      self.xi_m[:, a]         = xi_lam(float(self.t_m[0,a]))
+      self.xi_dot_m[:, a]     = xi_dot_lam(float(self.t_m[0,a]))
+      self.xi_dot_dot_m[:, a] = xi_dot_dot_lam(float(self.t_m[0,a]))
+      """self.xi_m[:, a]         = xi.subs(self.t, self.t_m[0,a])
       self.xi_dot_m[:, a]     = xi_dot.subs(self.t, self.t_m[0,a])
-      self.xi_dot_dot_m[:, a] = xi_dot_dot.subs(self.t, self.t_m[0,a])
-      print("Iteración E.T.: " + str(a))
+      self.xi_dot_dot_m[:, a] = xi_dot_dot.subs(self.t, self.t_m[0,a])"""
     self.q_in = q_in
-    self.ws_graph()
+    # self.ws_graph()
 
   def inverse_kinematics(self):
-    # Ecuación de cinemática inversa
-    # q_dot = J_inv * xi_dot
-    self.q_dot = self.J_inv * self.xi_dot
-    # print(self.q_dot)
+    print("Modelando cinemática inversa")
     # Generar arreglos para muestrear la trayectoria de las juntas
     # 3 filas, n columnas (n = número de muestras)
     self.q_m         = Matrix.zeros(3, self.samples)
@@ -168,11 +174,11 @@ class RobotKinematics():
                                               self.theta_0_1: self.q_m[0, a],
                                               self.theta_1_2: self.q_m[1, a],
                                               self.theta_2_3: self.q_m[2, a]})"""
-      print("Iteración E.J.: " + str(a))
+      # print("Iteración E.J.: " + str(a))
       # Aceleraciones
       # ac_sig = (v_sig - v_act) / dt
       self.q_dot_dot_m[:, a+1] = (self.q_dot_m[:, a+1] - self.q_dot_m[:, a]) / self.dt
-    self.q_graph()
+    print("Trayectoria de las juntas generada")
 
   def ws_graph(self):
     
@@ -256,6 +262,8 @@ def main():
   robot.direct_kinematics()
   robot.trajectory_generator()
   robot.inverse_kinematics()
+  robot.ws_graph()
+  robot.q_graph()
 
 if __name__ == "__main__":
   main()
