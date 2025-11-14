@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PointStamped
 from .kinematics import RobotKinematics
 
 class ManipulatorController(Node):
@@ -11,8 +11,15 @@ class ManipulatorController(Node):
     # Crear un objeto de robot
     self.robot_kinematics = RobotKinematics()
     self.robot_kinematics.direct_kinematics()
+    # Variable de control para definir si hay una trayectoria activa
+    self.moving = False
+    # Recibir información de una posición deseada
     self.end_effector_goal_subscriber = self.create_subscription(
       Twist, "/end_effector_goal", self.end_effector_callback, 10
+    )
+    # Recibir información de una posición clickeada en rviz
+    self.clicked_point_subscriber = self.create_subscription(
+      PointStamped, "/clicked_point", self.clicked_point_callback, 10
     )
     # Recibr información de posición actual de las juntas
     self.joint_states_subscriber = self.create_subscription(
@@ -24,10 +31,35 @@ class ManipulatorController(Node):
     )
     self.get_logger().info("Controlador inicializado")
   def end_effector_callback(self, msg:Twist):
+    if self.moving:
+      self.get_logger().warning("Trayectoria en progreso. Mensaje rechazado")
+      return
+    self.moving = True
+    self.get_logger().info("Punto objetivo recibido")
     # Valores del efector final -> Valores de las juntas
     # Decirle que plantee la trayectoria
     self.robot_kinematics.trajectory_generator(self.current_joint_states.position,
-                                               [msg.linear.x, msg.linear.z, msg.angular.y], 10)
+                                               [msg.linear.x, msg.linear.z, msg.angular.y], 3)
+    # Implementar modelo de cinemática inversa
+    self.robot_kinematics.inverse_kinematics()
+    # Implementar timer para publicar periódicamente la posición de las juntas
+    self.count = 0
+    self.joint_goals =  JointState()
+    self.joint_goals.name = ["shoulder_joint", "arm_joint", "forearm_joint"]
+    self.get_logger().info("Publicando trayectoria de las juntas")
+    self.position_publisher_timer = self.create_timer(self.robot_kinematics.dt, 
+                                                       self.trayectory_publisher_callback)
+    
+  def clicked_point_callback(self, msg:PointStamped):
+    if self.moving:
+      self.get_logger().warning("Trayectoria en progreso. Mensaje rechazado")
+      return
+    self.moving = True
+    self.get_logger().info("Punto objetivo clickeado")
+    # Valores del efector final -> Valores de las juntas
+    # Decirle que plantee la trayectoria
+    self.robot_kinematics.trajectory_generator(self.current_joint_states.position,
+                                               [msg.point.x, msg.point.z, 0.0], 3)
     # Implementar modelo de cinemática inversa
     self.robot_kinematics.inverse_kinematics()
     # Implementar timer para publicar periódicamente la posición de las juntas
@@ -54,6 +86,7 @@ class ManipulatorController(Node):
       self.count = 0
       self.position_publisher_timer.cancel()
       self.get_logger().info("Trayectoria finalizada")
+      self.moving = False
     
     
   def joint_states_callback(self, msg:JointState):
