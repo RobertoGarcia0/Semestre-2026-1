@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Twist, PointStamped
 from .kinematics import RobotKinematics
@@ -10,9 +11,14 @@ class ManipulatorController(Node):
     super().__init__("manipulator_controller")
     # Crear un objeto de robot
     self.robot_kinematics = RobotKinematics()
+    self.robot_kinematics.redirect_print(self.get_logger().info)
     self.robot_kinematics.direct_kinematics()
     # Variable de control para definir si hay una trayectoria activa
     self.moving = False
+    # Perfil de calidad de información
+    qos_profile = QoSProfile(realiability=ReliabilityPolicy.BEST_EFFORT, 
+                             history=HistoryPolicy.KEEP_LAST,
+                             depth=10)
     # Recibir información de una posición deseada
     self.end_effector_goal_subscriber = self.create_subscription(
       Twist, "/end_effector_goal", self.end_effector_callback, 10

@@ -256,6 +256,9 @@ class RobotKinematics():
     T_y = Matrix.vstack(Matrix.hstack(R_y, p_y), Matrix([[0,0,0,1]]))
     T_z = Matrix.vstack(Matrix.hstack(R_z, p_z), Matrix([[0,0,0,1]]))
     return T_x * T_y * T_z
+  def redirect_print(self, new_print):
+    global print
+    print = new_print
 
 def main():
   robot = RobotKinematics()
