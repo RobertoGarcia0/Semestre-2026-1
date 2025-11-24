@@ -9,11 +9,14 @@ class RobotKinematics():
   def direct_kinematics(self):
     print("Definiendo variables del modelo en sympy")
     self.theta_0_1, self.theta_1_2, self.theta_2_3 = symbols("theta_0_1, theta_1_2, theta_2_3")
-    T_0_1 = self.trans_homo(0, 0.1, 0, pi/2, 0, self.theta_0_1)
-    T_1_2 = self.trans_homo_xz(0.3, 0, 0, self.theta_1_2)
-    T_2_3 = self.trans_homo_xz(0.3, 0, 0, self.theta_2_3)
-    T_3_p = self.trans_homo_xz(0.3, 0, 0, 0)
-    T_0_p = simplify(T_0_1 * T_1_2 * T_2_3 * T_3_p)
+    self.l1 = 0.3
+    self.l2 = 0.3
+    self.l3 = 0.3
+    self.T_0_1 = self.trans_homo(0, 0.1, 0, pi/2, 0, self.theta_0_1)
+    self.T_1_2 = self.trans_homo_xz(self.l1, 0, 0, self.theta_1_2)
+    self.T_2_3 = self.trans_homo_xz(self.l2, 0, 0, self.theta_2_3)
+    self.T_3_p = self.trans_homo_xz(self.l3, 0, 0, 0)
+    T_0_p = simplify(self.T_0_1 * self.T_1_2 * self.T_2_3 * self.T_3_p)
 
     x_0_p = T_0_p[0, 3]
     z_0_p = T_0_p[2, 3]
@@ -44,8 +47,8 @@ class RobotKinematics():
       (self.theta_0_1, pi/4), (self.theta_1_2, -pi/4), (self.theta_2_3, pi/4)
     ]))"""
     print("Definidas todas las variables")
-  def trajectory_generator(self, q_in = [0.1, 0.1, 0.1], xi_fn = [0.8, 0.1, 0], duration = 10):
-    self.freq = 10
+  def trajectory_generator(self, q_in = [0.1, 0.1, 0.1], xi_fn = [0.8, 0.1, 0], duration = 4):
+    self.freq = 30
     print("Definiendo trayectoria")
     # Definiendo polinomio lambda
     # x = xi + lamb() (xf -xi)
