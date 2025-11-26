@@ -16,7 +16,7 @@ class ManipulatorController(Node):
     # Variable de control para definir si hay una trayectoria activa
     self.moving = False
     # Perfil de calidad de información
-    qos_profile = QoSProfile(realiability=ReliabilityPolicy.BEST_EFFORT, 
+    qos_profile = QoSProfile(reliability=ReliabilityPolicy.BEST_EFFORT, 
                              history=HistoryPolicy.KEEP_LAST,
                              depth=10)
     # Recibir información de una posición deseada
